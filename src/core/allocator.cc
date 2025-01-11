@@ -32,8 +32,30 @@ namespace infini
         // =================================== 作业 ===================================
         // TODO: 设计一个算法来分配内存，返回起始地址偏移量
         // =================================== 作业 ===================================
-
-        return 0;
+        this->used += size;
+        this->peak = std::max(this->peak, this->used);
+        for(auto it = free_blocks.begin(); it != free_blocks.end(); it++) {
+            if(it->second >= size) {
+                size_t addr = it->first;
+                if(it->second == size) {
+                    free_blocks.erase(it);
+                    std::cout << "in it-<second == size" << std::endl;
+                }else{
+                    size_t newSize = it->second - size;
+                    size_t new_addr = addr + size;
+                    free_blocks.erase(it);
+                    free_blocks.insert({new_addr, newSize});
+                }
+                return addr;
+            }
+        }
+         std::cout << "free_blocks:" << std::endl;
+        for(auto it = free_blocks.begin(); it != free_blocks.end(); it++) {
+           std::cout<<it->first<<" "<<it->second<<std::endl;
+        }
+        size_t addr = reinterpret_cast<size_t>(runtime->alloc(size));
+        
+        return addr;
     }
 
     void Allocator::free(size_t addr, size_t size)
@@ -44,6 +66,20 @@ namespace infini
         // =================================== 作业 ===================================
         // TODO: 设计一个算法来回收内存
         // =================================== 作业 ===================================
+        if(free_blocks.find(addr + size) != free_blocks.end()) {
+            size_t newSize = size + free_blocks[addr + size];
+            free_blocks.erase(addr + size);
+            free_blocks.insert({addr, newSize});
+        }else{
+            free_blocks.insert({addr, size});
+        }
+        std::cout << "free_blocks:" << std::endl;
+        for(auto it = free_blocks.begin(); it != free_blocks.end(); it++) {
+           std::cout<<it->first<<" "<<it->second<<std::endl;
+        }
+        std::cout << "size = " << size << std::endl;
+        this->used -= size;
+        std::cout << "this->used = " << this->used << std::endl; 
     }
 
     void *Allocator::getPtr()
