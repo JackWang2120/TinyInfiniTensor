@@ -19,7 +19,10 @@ namespace infini {
     size_t peak;
 
     size_t alignment;
-
+    //总空间大小
+    size_t maxSize;
+    //剩余空间大小
+    size_t remainSize;
     // pointer to the memory actually allocated
     void *ptr;
 

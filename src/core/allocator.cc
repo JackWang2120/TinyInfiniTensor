@@ -1,4 +1,5 @@
 #include "core/allocator.h"
+#include <cmath>
 #include <utility>
 
 namespace infini
@@ -8,7 +9,9 @@ namespace infini
         used = 0;
         peak = 0;
         ptr = nullptr;
-
+        maxSize = 1ULL<<32;
+        remainSize = maxSize;
+        //free_blocks.insert({0, maxSize});
         // 'alignment' defaults to sizeof(uint64_t), because it is the length of
         // the longest data type currently supported by the DataType field of
         // the tensor
@@ -33,29 +36,35 @@ namespace infini
         // TODO: 设计一个算法来分配内存，返回起始地址偏移量
         // =================================== 作业 ===================================
         this->used += size;
+        
         this->peak = std::max(this->peak, this->used);
         for(auto it = free_blocks.begin(); it != free_blocks.end(); it++) {
             if(it->second >= size) {
                 size_t addr = it->first;
                 if(it->second == size) {
                     free_blocks.erase(it);
-                    std::cout << "in it-<second == size" << std::endl;
+                    std::cout << "in it->second == size" << std::endl;
                 }else{
                     size_t newSize = it->second - size;
                     size_t new_addr = addr + size;
                     free_blocks.erase(it);
                     free_blocks.insert({new_addr, newSize});
                 }
+                this->remainSize -= size;
                 return addr;
             }
         }
-         std::cout << "free_blocks:" << std::endl;
-        for(auto it = free_blocks.begin(); it != free_blocks.end(); it++) {
-           std::cout<<it->first<<" "<<it->second<<std::endl;
+        //  std::cout << "free_blocks:" << std::endl;
+        // for(auto it = free_blocks.begin(); it != free_blocks.end(); it++) {
+        //    std::cout<<it->first<<" "<<it->second<<std::endl;
+        // }
+        //空闲块里面没有足够的空间，直接在末尾分配空闲空间
+        size_t addr = maxSize - remainSize;
+        remainSize -= size;
+        if(remainSize < 0) {
+            throw std::runtime_error("No extra free space available for allocation");
         }
-        size_t addr = reinterpret_cast<size_t>(runtime->alloc(size));
-        
-        return addr;
+       return addr;
     }
 
     void Allocator::free(size_t addr, size_t size)
@@ -66,20 +75,34 @@ namespace infini
         // =================================== 作业 ===================================
         // TODO: 设计一个算法来回收内存
         // =================================== 作业 ===================================
-        if(free_blocks.find(addr + size) != free_blocks.end()) {
-            size_t newSize = size + free_blocks[addr + size];
-            free_blocks.erase(addr + size);
-            free_blocks.insert({addr, newSize});
-        }else{
-            free_blocks.insert({addr, size});
-        }
-        std::cout << "free_blocks:" << std::endl;
-        for(auto it = free_blocks.begin(); it != free_blocks.end(); it++) {
-           std::cout<<it->first<<" "<<it->second<<std::endl;
-        }
-        std::cout << "size = " << size << std::endl;
         this->used -= size;
-        std::cout << "this->used = " << this->used << std::endl; 
+        free_blocks.insert({addr, size});
+        auto it = free_blocks.find(addr);
+        
+        //和后面的空闲块合并
+        auto itr = std::next(it);
+        if(itr != free_blocks.end() && itr->first == it->first + it->second) {
+            it->second += itr->second;
+            free_blocks.erase(itr);
+        }
+        //和前面的空闲块合并
+        if(it != free_blocks.begin()) {
+            auto itp = std::prev(it);
+            if(itp->first + itp->second == it->first) {
+                addr = itp->first;
+                size += itp->second;
+                free_blocks.erase(itp);
+                free_blocks.erase(it);
+                free_blocks.insert({addr, size});
+            }
+        }
+        //如果是最后一个空闲块，直接合并
+        if(it->first + it->second == maxSize - remainSize) {
+            remainSize += it->second;
+            free_blocks.erase(it);
+        }
+       
+
     }
 
     void *Allocator::getPtr()
