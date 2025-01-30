@@ -35,11 +35,30 @@ namespace infini
 
     optional<vector<Shape>> ClipObj::inferShape(const TensorVec &inputs)
     {
+        const auto A = inputs[0];
+        auto input_dim = A->getDims();
         // =================================== 作业 ===================================
         // TODO：返回经过 clip 操作后的 shape
         // REF: https://onnx.ai/onnx/operators/onnx__Clip.html#clip-13
         // =================================== 作业 ===================================
-        return std::nullopt;
+        for (size_t i = 0; i < input_dim.size(); i++)
+        {
+            if (minValue.has_value())
+            {
+                if (input_dim[i] < minValue.value())
+                {
+                    input_dim[i] = minValue.value();
+                }
+            }
+            if (maxValue.has_value())
+            {
+                if (input_dim[i] > maxValue.value())
+                {
+                    input_dim[i] = maxValue.value();
+                }
+            }
+        }
+        return vector<Shape>{input_dim};
     }
 
     std::string ClipObj::toString() const
@@ -61,12 +80,15 @@ namespace infini
 
     vector<DataType> CastObj::inferDataType(const TensorVec &inputs) const
     {
+        //.const auto A = inputs[0];
+       //auto input_dim = A->getDims();
         // =================================== 作业 ===================================
         // TODO：返回经过 cast 操作后, 输出 tensor 的数目和数据类型
         // REF_FILE: src/core/operator.cc
         // REF: https://onnx.ai/onnx/operators/onnx__Cast.html#cast-21
         // =================================== 作业 ===================================
-        return {};
+        //this->getOutputDataType();
+        return vector<DataType>{this->getOutputDataType()};
     }
 
     optional<vector<Shape>> CastObj::inferShape(const TensorVec &inputs)
@@ -75,7 +97,10 @@ namespace infini
         // TODO：返回经过 cast 操作后的 shape
         // REF: https://onnx.ai/onnx/operators/onnx__Cast.html#cast-21
         // =================================== 作业 ===================================
-        return std::nullopt;
+        const auto A = inputs[0];
+        auto input_dim = A->getDims();
+        return vector<Shape>{input_dim};
+        //return std::nullopt;
     }
 
     std::string CastObj::toString() const

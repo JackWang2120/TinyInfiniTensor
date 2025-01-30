@@ -15,11 +15,16 @@ TEST(Concat, NativeCpu) {
     auto t3 = g->addTensor({2, 2, 2, 1}, DataType::Float32);
     auto op = g->addOp<ConcatObj>(TensorVec{t1, t2, t3}, nullptr, 2);
     g->dataMalloc();
+    std::cout << "before setData t1" << std::endl;
     t1->setData(IncrementalGenerator());
+    std::cout << "before setData t2" << std::endl;
     t2->setData(OneGenerator());
+    std::cout << "before setData t3" << std::endl;
     t3->setData(OneGenerator());
-
+    std::cout << "before runtime run" << std::endl;
     runtime->run(g);
+    std::cout << "==========NativeCpu_Concat===========" << std::endl;
+    std::cout << op->getOutput()->toString() << std::endl;
     EXPECT_TRUE(op->getOutput()->equalData(
         vector<float>{0, 1, 2, 1, 1, 1, 3, 4,  5,  1, 1, 1,
                       6, 7, 8, 1, 1, 1, 9, 10, 11, 1, 1, 1}));

@@ -18,7 +18,8 @@ TEST(Transpose, NativeCpu) {
     input->setData(IncrementalGenerator());
 
     runtime->run(g);
-
+    std::cout<<"==========NativeCpu_transpose==========="<<std::endl;
+    std::cout << op->getOutput(0)->toString() << std::endl;
     EXPECT_TRUE(op->getOutput(0)->equalData(vector<float>{0, 1, 2, 3, 12, 13, 14, 15,
                                                           4, 5, 6, 7, 16, 17, 18, 19,
                                                           8, 9, 10, 11, 20, 21, 22, 23}));

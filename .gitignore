@@ -44,3 +44,4 @@ build_debug/
 *.onnx
 *.pb
 *.npy
+.cache
