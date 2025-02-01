@@ -5,6 +5,7 @@
 #include "operators/transpose.h"
 
 #include "test.h"
+#include <iostream>
 
 namespace infini
 {
@@ -23,9 +24,12 @@ namespace infini
         g->addOpWithOutputs<TransposeObj>(i2, t3, Shape{0, 1, 3, 2});
         g->addOpWithOutputs<MatmulObj>(t2, t3, o);
         // 优化前
+        std::cout << "Before optimize:" << std::endl;
+       // std::cout << "Before print:" << std::endl;
         g->print();
         g->optimize();
         // 优化后
+        std::cout << "After optimize:" << std::endl;
         g->print();
         EXPECT_EQ(g->getOperators().size(), 1);
         EXPECT_EQ(g->getTensors().size(), 3);

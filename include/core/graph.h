@@ -42,7 +42,7 @@ namespace infini
         const TensorVec &getTensors() const { return tensors; }
         const OpVec &getOperators() const { return ops; }
         Tensor getTensor(int) const;
-
+        void operatorMerge(Tensor& input, vector<Operator> &removed_ops, vector<Tensor> &removed_tensors, Operator& op);
         /**
          * @brief Sort the nodes in topological order.
          * It returns true if the sorting is successful.
